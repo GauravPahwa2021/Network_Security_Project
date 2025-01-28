@@ -24,6 +24,9 @@ from sklearn.ensemble import (
 )
 
 import mlflow
+# import dagshub
+# dagshub.init(repo_owner='GauravPahwa2021', repo_name='Network_Security_Project', mlflow=True)
+
 
 class ModelTrainer:
     def __init__(self,model_trainer_config:ModelTrainerConfig,data_transformation_artifact:DataTransformationArtifact):
@@ -33,7 +36,7 @@ class ModelTrainer:
         except Exception as e:
             raise NetworkSecuritySystemException(e,sys)
 
-    def track_mlflow(self,best_model,classificationmetric):
+    def track_mlflow(self,best_model,classificationmetric,input_example):
        
         with mlflow.start_run():
             f1_score=classificationmetric.f1_score
@@ -44,7 +47,7 @@ class ModelTrainer:
             mlflow.log_metric("f1_score",f1_score)
             mlflow.log_metric("precision",precision_score)
             mlflow.log_metric("recall_score",recall_score)
-            mlflow.sklearn.log_model(best_model,"model")    
+            mlflow.sklearn.log_model(best_model,"model",input_example=input_example)    
     
     def train_model(self,X_train,y_train,x_test,y_test):
         models = {
@@ -105,15 +108,21 @@ class ModelTrainer:
         y_train_pred = best_model.predict(X_train)
 
         classification_train_metric = get_classification_score(y_true=y_train,y_pred=y_train_pred)
+
+        # Prepare an input example
+        input_example1 = X_train[:1]  # Use the first sample from the training data as an example
         
         # Track the experiements with mlflow
-        self.track_mlflow(best_model,classification_train_metric)
+        self.track_mlflow(best_model,classification_train_metric,input_example1)
 
 
         y_test_pred=best_model.predict(x_test)
         classification_test_metric=get_classification_score(y_true=y_test,y_pred=y_test_pred)
 
-        self.track_mlflow(best_model,classification_test_metric)
+        # Prepare an input example
+        input_example2 = x_test[:1]  # Use the first sample from the test data as an example
+
+        self.track_mlflow(best_model,classification_test_metric,input_example2)
 
         preprocessor = load_preprocessor_object(file_path=self.data_transformation_artifact.transformed_object_file_path)
             
