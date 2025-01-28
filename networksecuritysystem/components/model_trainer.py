@@ -132,7 +132,7 @@ class ModelTrainer:
         Network_Model=NetworkModel(preprocessor=preprocessor,model=best_model)
         save_preprocessor_object(self.model_trainer_config.trained_model_file_path,obj=Network_Model)
 
-        #model pusher
+        # model pusher
         save_preprocessor_object("final_model/model.pkl",best_model)
         
 
