@@ -3,3 +3,6 @@ venv/
 Artifacts/
 logs/
 mlruns/
+__pycache__/
+*.pyc
+networksecuritysystem/__pycache__/
