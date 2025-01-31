@@ -10,7 +10,7 @@ on:
 
 jobs:
     Continuous-integration:
-        name: checkout code and run unit tests
+        name: Continuous Integration
         runs-on: ubuntu-latest
         steps:
             - name: Checkout Code
@@ -23,7 +23,7 @@ jobs:
               run: echo "Running unit tests"
     
     Continuous-delivery:
-        name: build and push images to aws-ecr 
+        name: Continuous Delivery 
         needs: Continuous-integration
         runs-on: ubuntu-latest
         steps:
@@ -59,7 +59,7 @@ jobs:
                 echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
                 
     # Continuous-deployment:
-    #     name: pull ecr-image and deploy to amazon-ec2 instance
+    #     name: Continuous Deployment
     #     needs: Continuous-delivery
     #     runs-on: ubuntu-latest
     #     steps:
@@ -78,7 +78,7 @@ jobs:
     #           uses: aws-actions/amazon-ecr-login@v1
               
               
-    #         - name: Pull latest images
+    #         - name: Pull latest images from ECR repository
     #           run: |
     #             docker pull ${{secrets.AWS_ECR_LOGIN_URI}}/${{ secrets.ECR_REPOSITORY_NAME }}:latest
                  
@@ -86,7 +86,7 @@ jobs:
     #         #   run: |
     #         #     docker ps -q --filter "name=networksecurity" | grep -q . && docker stop networksecurity && docker rm -fv networksecurity
                
-    #         - name: Run Docker Image to serve users
+    #         - name: Run Docker Image to serve users on EC2 instance
     #           run: |
     #             docker run -d -p 8080:8080 --ipc="host" --name=networksecurity -e 'AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}' -e 'AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}' -e 'AWS_REGION=${{ secrets.AWS_REGION }}'  ${{secrets.AWS_ECR_LOGIN_URI}}/${{ secrets.ECR_REPOSITORY_NAME }}:latest
     #         - name: Clean previous images and containers
