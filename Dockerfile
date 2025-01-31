@@ -4,8 +4,6 @@ WORKDIR /app
 
 COPY . /app
 
-RUN apt-get update -y && apt-get install awscli -y 
-
-RUN apt-get update && pip install -r requirements.txt
+RUN apt-get update -y && apt-get install awscli -y && pip install -r requirements.txt
 
 CMD ["python", "app.py"]
