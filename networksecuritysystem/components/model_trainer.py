@@ -23,9 +23,21 @@ from sklearn.ensemble import (
     RandomForestClassifier,
 )
 
+from urllib.parse import urlparse
 import mlflow
-# import dagshub
-# dagshub.init(repo_owner='GauravPahwa2021', repo_name='Network_Security_Project', mlflow=True)
+import dagshub
+# Initialize DagsHub
+dagshub.init(repo_owner='GauravPahwa2021', repo_name='Network_Security_Project', mlflow=True)
+
+# Set the MLflow tracking URI to DagsHub
+mlflow.set_tracking_uri("https://dagshub.com/GauravPahwa2021/Network_Security_Project.mlflow")
+
+from dotenv import load_dotenv
+load_dotenv()
+
+# Set DagsHub credentials as environment variables
+os.environ['MLFLOW_TRACKING_USERNAME'] = os.getenv("MLFLOW_TRACKING_USERNAME")
+os.environ['MLFLOW_TRACKING_PASSWORD'] = os.getenv("MLFLOW_TRACKING_PASSWORD")
 
 
 class ModelTrainer:
@@ -37,17 +49,29 @@ class ModelTrainer:
             raise NetworkSecuritySystemException(e,sys)
 
     def track_mlflow(self,best_model,classificationmetric,input_example):
-       
+        mlflow.set_registry_uri("https://dagshub.com/GauravPahwa2021/Network_Security_Project.mlflow")
+        tracking_url_type_store = urlparse(mlflow.get_tracking_uri()).scheme
+
         with mlflow.start_run():
             f1_score=classificationmetric.f1_score
             precision_score=classificationmetric.precision_score
             recall_score=classificationmetric.recall_score
 
-
+            mlflow.log_param("model_name",best_model.__class__.__name__)
             mlflow.log_metric("f1_score",f1_score)
             mlflow.log_metric("precision",precision_score)
             mlflow.log_metric("recall_score",recall_score)
-            mlflow.sklearn.log_model(best_model,"model",input_example=input_example)    
+            mlflow.sklearn.log_model(best_model,"model",input_example=input_example)  
+            # Model registry does not work with file store
+            if tracking_url_type_store != "file":
+
+                # Register the model
+                # There are other ways to use the Model Registry, which depends on the use case,
+                # please refer to the doc for more information:
+                # https://mlflow.org/docs/latest/model-registry.html#api-workflow
+                mlflow.sklearn.log_model(best_model, "model", registered_model_name=best_model.__class__.__name__,input_example=input_example)
+            else:
+                mlflow.sklearn.log_model(best_model, "model",input_example=input_example)  
     
     def train_model(self,X_train,y_train,x_test,y_test):
         models = {
@@ -110,7 +134,8 @@ class ModelTrainer:
         classification_train_metric = get_classification_score(y_true=y_train,y_pred=y_train_pred)
 
         # Prepare an input example
-        input_example1 = X_train[:1]  # Use the first sample from the training data as an example
+        input_example1 = X_train[:1].reshape(1, -1)  # Ensure it is 2D
+        # Use the first sample from the training data as an example
         
         # Track the experiements with mlflow
         self.track_mlflow(best_model,classification_train_metric,input_example1)
@@ -120,7 +145,8 @@ class ModelTrainer:
         classification_test_metric=get_classification_score(y_true=y_test,y_pred=y_test_pred)
 
         # Prepare an input example
-        input_example2 = x_test[:1]  # Use the first sample from the test data as an example
+        input_example2 = x_test[:1].reshape(1, -1)  # Ensure it is 2D  
+        # Use the first sample from the test data as an example
 
         self.track_mlflow(best_model,classification_test_metric,input_example2)
 
